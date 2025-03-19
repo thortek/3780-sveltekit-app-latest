@@ -49,7 +49,39 @@ export const actions = {
     submitReview: async ({ request, locals }: RequestEvent) => {
         //const client = locals.mongoClient as MongoClient
         const data = await request.formData()
-        console.log(data)
-        return { success: true, message: 'Review submitted' }
+        const username = data.get('username') as string
+        const rating = data.get('rating') as string
+        const review = data.get('review') as string
+        const listingName = data.get('listingName') as string
+        try {
+            await addReview(username, Number(rating), review, listingName, locals.mongoClient)
+
+            return { success: true, message: 'Review submitted' }
+
+        } catch (error) {
+            console.error('Database error:', error)
+            return { success: false, message: 'Failed to submit review' }
+        }
     }
 }
+
+async function addReview(username: string, rating: number, review: string, listingName: string, client: MongoClient): Promise<void> {
+    console.log('addReview: ', username, rating, review, listingName)
+    if (username === '') throw new Error('Username is required')
+    if (listingName === '') throw new Error('Listing name is required')
+    if (review === '') throw new Error('Review is required')
+    
+    // Add review to the database
+
+}
+
+/* async function getUserId(username: string, client: MongoClient): Promise<ObjectId> {
+    // Get user ID from the database
+    // connect to the database
+    try {
+        const userDb = client.db('dwdd-3780')
+
+    } catch (error) {
+        throw new Error('Failed to get user ID')
+    }
+} */

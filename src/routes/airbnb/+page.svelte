@@ -64,6 +64,7 @@
 			}}>
 			<input type="hidden" name="selectedListing" value={selectedListing} />
 			<input type="hidden" name="username" value={data.userProfile.name} />
+			<input type="hidden" name="listingName" value={listingName} />
 			<div>
 				<p class="text-2xl">Review of: {listingName}</p>
 				<Rating value={starValue} allowHalf onValueChange={(e) => (starValue = e.value)} />
