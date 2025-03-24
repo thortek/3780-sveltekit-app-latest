@@ -47,7 +47,7 @@ export const load: PageServerLoad = async ({ locals }: RequestEvent) => {
 
 export const actions = {
     submitReview: async ({ request, locals }: RequestEvent) => {
-        //const client = locals.mongoClient as MongoClient
+        const client = locals.mongoClient as MongoClient
         const data = await request.formData()
         const username = data.get('username') as string
         const rating = data.get('rating') as string
@@ -55,8 +55,23 @@ export const actions = {
         const listingName = data.get('listingName') as string
         try {
             await addReview(username, Number(rating), review, listingName, locals.mongoClient)
+            const listingId = await getListingId(listingName, client)
+            const reviewedListing = await locals.mongoClient.db('sample_airbnb').collection('listingsAndReviews')
+            .findOne({ _id: listingId })
 
-            return { success: true, message: 'Review submitted' }
+            const simplifiedReviews = reviewedListing.reviews.map((doc: any) => {
+                return {
+                    _id: doc._id.toString(),
+                    comments: doc.comments,
+                    date: doc.date,
+                    listing_id: doc.listing_id,
+                    rating: doc.rating,
+                    reviewer_id: doc.reviewer_id,
+                    reviewer_name: doc.reviewer_name
+                }
+            })
+
+            return { success: true, message: 'Review submitted', reviews: simplifiedReviews || [] }
 
         } catch (error) {
             console.error('Database error:', error)
@@ -72,16 +87,84 @@ async function addReview(username: string, rating: number, review: string, listi
     if (review === '') throw new Error('Review is required')
     
     // Add review to the database
+    const userId = await getUserId(username, client)
+    const listingId = await getListingId(listingName, client)
+    try {
+        const listingsWithReviews = client?.db('sample_airbnb').collection('listingsAndReviews')
+        await listingsWithReviews?.updateOne(
+            { _id: listingId },
+            {
+                $push: {
+                    reviews: {
+                        _id: new ObjectId().toString(),
+                        date: new Date(),
+                        listing_id: listingId.toString(),
+                        reviewer_id: userId.toString(),
+                        comments: review,
+                        reviewer_name: username,
+                        rating: rating
+                    } as any
+                }
+            })
 
+    } catch (error) {
+        throw new Error('Failed to add review')
+    }
+
+    // Now, add the review to the user's reviews property
+    try {
+        const usersCollection = client?.db('dwdd-3780').collection('users')
+        await usersCollection?.updateOne(
+            { _id: userId },
+            {
+                $push: {
+                    reviews: {
+                        _id: new ObjectId().toString(),
+                        date: new Date(),
+                        listing_id: listingId.toString(),
+                        listing_name: listingName,
+                        comments: review,
+                        rating: rating
+                    } as any
+                }
+            }
+        )
+
+    } catch (error) {
+        throw new Error('Failed to add review to user reviews property')
+    }
 }
 
-/* async function getUserId(username: string, client: MongoClient): Promise<ObjectId> {
+async function getUserId(username: string, client: MongoClient): Promise<ObjectId> {
     // Get user ID from the database
     // connect to the database
     try {
         const userDb = client.db('dwdd-3780')
-
+        const userCollection = userDb.collection('users')
+        const user = await userCollection?.findOne({ name: username})
+        if (!user) {
+            // Create a new user
+            const result = await userCollection?.insertOne({ name: username })
+            return result.insertedId
+        }
+        return user?._id
     } catch (error) {
         throw new Error('Failed to get user ID')
     }
-} */
+}
+
+async function getListingId(listingName: string, client: MongoClient): Promise<ObjectId> {
+    // Get listingId from the database
+    // connect to the database
+    try {
+        const airbnbDB = client?.db('sample_airbnb')
+        const airbnbCollection = airbnbDB.collection('listingsAndReviews')
+        const listing = await airbnbCollection?.findOne({ name: listingName})
+        if (!listing) {
+            throw new Error('Listing not found')
+        }
+        return listing?._id
+    } catch (error) {
+        throw new Error('Failed to get listing id')
+    }
+}
