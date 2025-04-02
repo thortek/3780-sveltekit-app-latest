@@ -1,8 +1,8 @@
-
+import type { SaleData } from '$lib/types/SalesTypes.js'    
 
 export async function GET( { url, locals }) {
 
-    let salesData
+    let salesData: SaleData[] = []
     let client
 
     try {
@@ -14,6 +14,8 @@ export async function GET( { url, locals }) {
         salesData = await salesCollection.find().toArray()
 
         console.log('salesArray', salesData)
+
+        console.log(JSON.stringify(salesData[0]), null, 2)
 
     } catch (error) {
         console.error('Error fetching sales data:', error);
