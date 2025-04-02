@@ -7,18 +7,35 @@
     // Default sale data to prevent undefined errors
     function defaultSaleData(): SaleData {
         return {
-            _id: '',
+            _id: '5bd761dcae323e45a93ccfe8',
             saleDate: new Date().toISOString(),
-            items: [],
-            storeLocation: '',
+            items: [{
+			name: "printer paper",
+			tags: ["office", "stationary"],
+			price: { $numberDecimal: "40.01" },
+			quantity: 2
+		},
+		{
+			name: "notepad",
+			tags: ["office", "writing", "school"],
+			price: { $numberDecimal: "35.29" },
+			quantity: 2
+		},
+		{
+			name: "pens",
+			tags: ["writing", "office", "school", "stationary"],
+			price: { $numberDecimal: "56.12" },
+			quantity: 5
+		}],
+            storeLocation: 'Denver',
             customer: { 
-                gender: '', 
-                age: 0, 
-                email: '', 
-                satisfaction: 0 
+                gender: 'M', 
+                age: 42, 
+                email: 'cauho@witwuta.sv', 
+                satisfaction: 4 
             },
             couponUsed: false,
-            purchaseMethod: ''
+            purchaseMethod: 'Online'
         };
     }
 
