@@ -11,18 +11,18 @@ export async function GET( { url, locals }) {
         const salesDb = client.db('sample_supplies')
         const salesCollection = salesDb.collection('sales')
 
-        salesData = await salesCollection.find().toArray()
+        salesData = await salesCollection.find().limit(5).toArray()
 
         console.log('salesArray', salesData)
 
-        console.log(JSON.stringify(salesData[0]), null, 2)
+        console.log(JSON.stringify(salesData), null, 2)
+
+        return new Response(JSON.stringify(salesData), { status: 200 });
 
     } catch (error) {
         console.error('Error fetching sales data:', error);
         return new Response(JSON.stringify({ error: 'Error fetching sales data' }), { status: 500 });
     }
-    return new Response(JSON.stringify(salesData), { status: 200 });
-
 }
 
 export async function POST( { request }) {

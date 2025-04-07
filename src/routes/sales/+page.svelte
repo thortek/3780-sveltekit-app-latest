@@ -4,10 +4,11 @@
 	import SaleDetails from '$lib/components/SaleDetails.svelte'
 
 	// Convert to $state rune
-	let salesData = $state<SaleData | undefined>(undefined)
+	let salesData = $state<SaleData[]>([])
 
 	onMount(() => {
-		console.log('Page data:')
+		console.log('Just mounted... going to fetch sales data')
+        //getSalesData()
 	})
 
 	async function getSalesData() {
@@ -21,4 +22,6 @@
 <h1>Sales Page</h1>
 <button class="btn preset-filled-primary-500" onclick={getSalesData}>Get Sales Data</button>
 
-<SaleDetails saleData={salesData} />
+{#each salesData as sale}
+  <SaleDetails salesData={sale} />
+{/each}
