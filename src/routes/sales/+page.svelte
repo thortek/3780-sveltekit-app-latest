@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
-	import type { SaleData } from '$lib/types/SalesTypes'
+	import type { SaleData, Item } from '$lib/types/SalesTypes'
 	import SaleDetails from '$lib/components/SaleDetails.svelte'
 	import { Accordion } from '@skeletonlabs/skeleton-svelte'
 	import BadgeDollarSign from '@lucide/svelte/icons/badge-dollar-sign'
@@ -15,6 +15,15 @@
 		console.log('Just mounted... going to fetch sales data')
 		//getSalesData()
 	})
+
+    const totalCost = (sale: SaleData) => {
+		return sale.items
+			?.reduce(
+				(sum: number, item: Item) => sum + parseFloat(item.price.$numberDecimal) * item.quantity,
+				0
+			)
+			?.toFixed(2) || '0.00'
+    }
 
 	async function getSalesData() {
 		loading = true
@@ -61,15 +70,15 @@
 		<p class="text-2xl">Found {salesData.length} sales</p>
 		<Accordion collapsible>
 			{#each salesData as sale}
-				<Accordion.Item value={sale._id}>
-					{#snippet lead()}<BadgeDollarSign size={24} />{/snippet}
+				<Accordion.Item value={sale._id} leadClasses="flex items-center gap-2">
+					{#snippet lead()}<BadgeDollarSign size={24} /> {totalCost(sale)}{/snippet}
 					{#snippet control()}{sale.storeLocation}{/snippet}
 					{#snippet panel()}<SaleDetails salesData={sale} />{/snippet}
 				</Accordion.Item>
 			{/each}
 		</Accordion>
 	{/if}
-    
+
     {#if salesData.length === 0 && !loading}
         <p class="text-2xl">0 sales found</p>
     {/if}
