@@ -38,8 +38,20 @@ export async function GET({ url, locals }) {
 	}
 }
 
-export async function POST({ request }) {
+export async function POST({ request, locals }) {
 	const body = await request.json()
-	//console.log(body);
-	return new Response(JSON.stringify({ message: 'ok' }), { status: 200 })
+	console.log(JSON.stringify(body, null, 2));
+	let client
+	try {
+		client = locals.mongoClient
+		const myDb = client.db('dwdd-3780')
+		const statsCollection = myDb.collection('snapshots')
+
+		await statsCollection.insertOne(body)
+		return new Response(JSON.stringify({ message: 'ok' }), { status: 200 })
+
+	} catch (error) {
+		console.error('Error inserting data:', error)
+		return new Response(JSON.stringify({ error: 'Error inserting data' }), { status: 500 })
+	}
 }

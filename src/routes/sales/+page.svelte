@@ -31,7 +31,7 @@
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json'
-			}
+			},
 		})
 		if (!response.ok) {
 			salesData = []
@@ -39,10 +39,51 @@
 			return
 		}
 		const data = await response.json()
-		//console.log('Sales data:', data)
+		console.log('Sales data:', data)
 		salesData = data
 		loading = false
 	}
+
+	const storeStats = async () => {
+		loading = true
+		const salesDataToStore = salesData.map((sale) => {
+			return {
+				_id: sale._id,
+				items: sale.items.filter(item => item.name.toLowerCase().includes(itemName.toLowerCase()))
+				.map(item => ({
+					name: item.name,
+					price: item.price.$numberDecimal,
+				})),
+				purchaseMethod: sale.purchaseMethod,
+				storeLocation: sale.storeLocation,
+				saleDate: sale.saleDate,
+			}
+		})
+
+		const snapshot = {
+			salesData: salesDataToStore,
+			itemName: itemName,
+			couponUsed: couponUsed,
+			createdAt: new Date().toISOString(),
+		}
+
+		const response = await fetch('/api/sales', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(snapshot)
+		})
+		if (!response.ok) {
+			salesData = []
+			loading = false
+			return
+		}
+		console.log('Stored sales data')
+		loading = false
+	}
+
+
 </script>
 
 <main class="flex flex-col items-center justify-center">
@@ -63,7 +104,11 @@
 				<span>Coupon Used</span>
 			</label>
 		</form>
+		<div class="flex">
 		<button class="btn preset-filled-primary-500 m-4" onclick={getSalesData}>Get Sales Data</button>
+		<button class="btn preset-filled-primary-500 m-4" onclick={storeStats}
+		disabled={!itemName || salesData.length === 0}>Save Snapshot</button>
+		</div>
 	</div>
 
 	{#if salesData.length > 0}
